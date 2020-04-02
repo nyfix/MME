@@ -45,17 +45,6 @@ mama_status mamaEnvTimer_allocate(mamaTimerCb callback, void* closure, mmeTimer*
 
 
 //////////////////////////////////////////////////////////////////////////////
-mama_status mamaEnvTimer_shutdown(mmeTimer* timer)
-{
-    wlock_lock(timer->m_lock);
-    timer->m_callback = NULL;
-    wlock_unlock(timer->m_lock);
-
-    return MAMA_STATUS_OK;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
 mama_status mamaEnvTimer_destroy(mmeTimer* timer)
 {
     /* Returns. */
@@ -94,6 +83,30 @@ mama_status mamaEnvTimer_destroy(mmeTimer* timer)
 
 
 //////////////////////////////////////////////////////////////////////////////
+void MAMACALLTYPE mamaEnvTimer_onTimerDestroy(mamaQueue queue, void* closure)
+{
+    /* Returns. */
+    mama_status ret = MAMA_STATUS_NULL_ARG;
+
+    /* Cast the closure to a timer object. */
+    mmeTimer* timer = (mmeTimer*)closure;
+    if (timer != NULL) {
+        /* Acquire the lock in case anything else is using the timer at the moment. */
+        wlock_lock(timer->m_destroyLock);
+        wlock_lock(timer->m_lock);
+
+        /* Destroy it. */
+        ret = mamaEnvTimer_destroy(timer);
+
+        /* Note that we do not release the lock as it has now been destroyed. */
+    }
+
+    /* Write a mama log. */
+    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onTimerDestroy with timer %p completed with code %X.", timer, ret);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 void MAMACALLTYPE mamaEnvTimer_onTimerTick(mamaTimer timer, void* closure)
 {
     /* Cast the closure to the session timer object. */
@@ -118,24 +131,11 @@ void MAMACALLTYPE mamaEnvTimer_onTimerTick(mamaTimer timer, void* closure)
 
 
 //////////////////////////////////////////////////////////////////////////////
-void MAMACALLTYPE mamaEnvTimer_onTimerDestroy(mamaQueue queue, void* closure)
+mama_status mamaEnvTimer_shutdown(mmeTimer* timer)
 {
-    /* Returns. */
-    mama_status ret = MAMA_STATUS_NULL_ARG;
+    wlock_lock(timer->m_lock);
+    timer->m_callback = NULL;
+    wlock_unlock(timer->m_lock);
 
-    /* Cast the closure to a timer object. */
-    mmeTimer* timer = (mmeTimer*)closure;
-    if (timer != NULL) {
-        /* Acquire the lock in case anything else is using the timer at the moment. */
-        wlock_lock(timer->m_destroyLock);
-        wlock_lock(timer->m_lock);
-
-        /* Destroy it. */
-        ret = mamaEnvTimer_destroy(timer);
-
-        /* Note that we do not release the lock as it has now been destroyed. */
-    }
-
-    /* Write a mama log. */
-    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onTimerDestroy with timer %p completed with code %X.", timer, ret);
+    return MAMA_STATUS_OK;
 }

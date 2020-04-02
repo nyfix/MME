@@ -61,41 +61,6 @@ mama_status mamaEnvSubscription_allocate(mmeSubscriptionCallback* callback, void
 
 
 //////////////////////////////////////////////////////////////////////////////
-mama_status mamaEnvSubscription_deallocate(mmeSubscription* subscription)
-{
-    /* Returns. */
-    mama_status ret = MAMA_STATUS_OK;
-    if (subscription != NULL) {
-        /* Deallocate the mama subscription. */
-        if (subscription->m_subscription != NULL) {
-            mama_status msd = mamaSubscription_deallocate(subscription->m_subscription);
-            if (ret == MAMA_STATUS_OK) {
-                ret = msd;
-            }
-
-            /* Clear the member variable. */
-            subscription->m_subscription = NULL;
-        }
-
-        /* Destroy the lock. */
-        if (subscription->m_lock != NULL) {
-            wlock_unlock(subscription->m_lock);
-            int rc = wlock_destroy(subscription->m_lock);
-            if (rc != 0) {
-                mama_log(MAMA_LOG_LEVEL_SEVERE, "mamaEnvSubscription_deallocate -- got non-zero rc=%d destoying m_lock", rc);
-            }
-            subscription->m_lock = NULL;
-        }
-
-        /* Free the object. */
-        free(subscription);
-    }
-
-    return ret;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
 mama_status mamaEnvSubscription_create(mamaQueue queue, const char* source, mmeSubscription* subscription, const char* symbol, mamaTransport transport, mmeSubscriptionType type)
 {
     /* Returns. */
@@ -131,18 +96,6 @@ mama_status mamaEnvSubscription_create(mamaQueue queue, const char* source, mmeS
 
 
 //////////////////////////////////////////////////////////////////////////////
-mama_status mamaEnvSubscription_shutdown(mmeSubscription* subscription)
-{
-    wlock_lock(subscription->m_lock);
-    subscription->m_callback.m_onMsgBasic = NULL;
-    subscription->m_callback.m_onMsgWildcard = NULL;
-    wlock_unlock(subscription->m_lock);
-
-    return MAMA_STATUS_OK;
-}
-
-
-//////////////////////////////////////////////////////////////////////////////
 mama_status mamaEnvSubscription_destroy(mmeSubscription* subscription)
 {
     /* Destroy the mama subscription, it will be deallocated later on when the subscription
@@ -170,6 +123,41 @@ void MAMACALLTYPE mamaEnvSubscription_onSubscriptionDestroy(mamaQueue queue, voi
 
     /* Write a mama log. */
     mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onSubscriptionDestroy with subscription %p completed with code %X.", subscription, ret);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+mama_status mamaEnvSubscription_deallocate(mmeSubscription* subscription)
+{
+    /* Returns. */
+    mama_status ret = MAMA_STATUS_OK;
+    if (subscription != NULL) {
+        /* Deallocate the mama subscription. */
+        if (subscription->m_subscription != NULL) {
+            mama_status msd = mamaSubscription_deallocate(subscription->m_subscription);
+            if (ret == MAMA_STATUS_OK) {
+                ret = msd;
+            }
+
+            /* Clear the member variable. */
+            subscription->m_subscription = NULL;
+        }
+
+        /* Destroy the lock. */
+        if (subscription->m_lock != NULL) {
+            wlock_unlock(subscription->m_lock);
+            int rc = wlock_destroy(subscription->m_lock);
+            if (rc != 0) {
+                mama_log(MAMA_LOG_LEVEL_SEVERE, "mamaEnvSubscription_deallocate -- got non-zero rc=%d destoying m_lock", rc);
+            }
+            subscription->m_lock = NULL;
+        }
+
+        /* Free the object. */
+        free(subscription);
+    }
+
+    return ret;
 }
 
 
@@ -286,4 +274,16 @@ void MAMACALLTYPE mamaEnvSubscription_onMsgWildcard(mamaSubscription subscriptio
         /* Unlock the subscription. */
         wlock_unlock(envSubscription->m_lock);
     }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+mama_status mamaEnvSubscription_shutdown(mmeSubscription* subscription)
+{
+    wlock_lock(subscription->m_lock);
+    subscription->m_callback.m_onMsgBasic = NULL;
+    subscription->m_callback.m_onMsgWildcard = NULL;
+    wlock_unlock(subscription->m_lock);
+
+    return MAMA_STATUS_OK;
 }

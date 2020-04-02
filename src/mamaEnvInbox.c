@@ -38,16 +38,6 @@ mama_status mamaEnvInbox_allocate(void* closure, mamaInboxErrorCallback errorCal
 
 
 //////////////////////////////////////////////////////////////////////////////
-mama_status mamaEnvInbox_shutdown(mmeInbox* inbox)
-{
-    wlock_lock(inbox->m_lock);
-    inbox->m_msgCallback = NULL;
-    wlock_unlock(inbox->m_lock);
-
-    return MAMA_STATUS_OK;
-}
-
-//////////////////////////////////////////////////////////////////////////////
 mama_status mamaEnvInbox_destroy(mmeInbox* inbox)
 {
     /* Returns. */
@@ -78,7 +68,7 @@ mama_status mamaEnvInbox_destroy(mmeInbox* inbox)
 
 
 //////////////////////////////////////////////////////////////////////////////
-void MAMACALLTYPE mamaEnvInbox_onMessageCallback(mamaMsg msg, void* closure)
+void MAMACALLTYPE mamaEnvInbox_onErrorCallback(mama_status status, void* closure)
 {
     /* Cast the closure to the inbox object. */
     mmeInbox* envInbox = (mmeInbox*)closure;
@@ -87,8 +77,8 @@ void MAMACALLTYPE mamaEnvInbox_onMessageCallback(mamaMsg msg, void* closure)
         wlock_lock(envInbox->m_lock);
 
         /* Invoke the original callback function. */
-        if (envInbox->m_msgCallback != NULL) {
-            (envInbox->m_msgCallback)(msg, envInbox->m_closure);
+        if (envInbox->m_errorCallback != NULL) {
+            (envInbox->m_errorCallback)(status, envInbox->m_closure);
         }
 
         /* Unlock the inbox. */
@@ -119,8 +109,9 @@ void MAMACALLTYPE mamaEnvInbox_onInboxDestroy(mamaQueue queue, void* closure)
     mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onInboxDestroy with inbox %p completed with code %X.", inbox, ret);
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
-void MAMACALLTYPE mamaEnvInbox_onErrorCallback(mama_status status, void* closure)
+void MAMACALLTYPE mamaEnvInbox_onMessageCallback(mamaMsg msg, void* closure)
 {
     /* Cast the closure to the inbox object. */
     mmeInbox* envInbox = (mmeInbox*)closure;
@@ -129,11 +120,23 @@ void MAMACALLTYPE mamaEnvInbox_onErrorCallback(mama_status status, void* closure
         wlock_lock(envInbox->m_lock);
 
         /* Invoke the original callback function. */
-        if (envInbox->m_errorCallback != NULL) {
-            (envInbox->m_errorCallback)(status, envInbox->m_closure);
+        if (envInbox->m_msgCallback != NULL) {
+            (envInbox->m_msgCallback)(msg, envInbox->m_closure);
         }
 
         /* Unlock the inbox. */
         wlock_unlock(envInbox->m_lock);
     }
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+mama_status mamaEnvInbox_shutdown(mmeInbox* inbox)
+{
+    wlock_lock(inbox->m_lock);
+    inbox->m_msgCallback = NULL;
+    wlock_unlock(inbox->m_lock);
+
+    return MAMA_STATUS_OK;
+}
+
