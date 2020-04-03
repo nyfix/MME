@@ -48,4 +48,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNFLAGS}")
 
+# install header files
+install(DIRECTORY mama/ DESTINATION include)
+
 add_subdirectory(src)
