@@ -1,0 +1,116 @@
+@startuml
+
+'skinparam linetype polyline
+'skinparam linetype ortho
+
+together mme {
+
+   together  mme1 {
+      class mmeConnection
+      {
+          mamaBridge m_bridge
+      '    MamaEvent* m_destroySynch
+          mamaDispatcher m_objectDispatcher
+          mamaQueue m_objectQueue
+          wList m_sessions
+          wList m_destroyedSessions
+          mamaTimer m_sessionTimer
+      }
+
+      class mmeSession
+      {
+          mamaDispatcher m_dispatcher
+          mamaQueue m_queue
+          SynchronizedMap* m_inboxes
+          SynchronizedMap* m_subscriptions
+          SynchronizedMap* m_timers
+      }
+   }
+
+   together mme2 {
+      class mmeTimer
+      {
+          mamaTimer m_timer
+          mamaTimerCb m_callback
+          void* m_closure
+          wLock m_lock
+          wLock m_destroyLock
+      }
+
+      class mmeInbox
+      {
+          mamaInbox m_inbox
+          void* m_closure
+          mamaInboxErrorCallback m_errorCallback
+          wLock m_lock
+          mamaInboxMsgCallback m_msgCallback
+      }
+
+      class mmeSubscription
+      {
+          mamaSubscription m_subscription
+          mmeSubscriptionCallback m_callback
+          void* m_closure
+          wLock m_lock
+      }
+   }
+}
+
+mme1 -[hidden]down- mme2
+mme2 -[hidden]up- mme1
+
+together {
+   class mamaDispatcher {
+   + mQueue
+   }
+
+   class mamaQueue {
+   + mDispatcher
+   }
+}
+
+class mamaTimer {
++ mQueue
+}
+
+class mamaSubscription
+{
+    mamaTransport            mTransport
+    mamaQueue                mQueue
+}
+
+class mamaInbox {
+'   mamaBridgeImpl*  mBridgeImpl
+'   inboxBridge      mMamaInboxBridgeImpl
+'   mamaInboxDestroyCallback mOnInboxDestroyed
+   mamaQueue        mMamaQueue
+'   mamaQueueLockHandle mLockHandle
+}
+
+
+
+
+'mamaEnvConnection --> mmeConnection
+
+mmeConnection::m_objectDispatch --> mamaDispatcher
+mmeConnection::m_objectQueue --> mamaQueue : Object Queue
+mmeConnection::m_sessionTimer --> mamaTimer
+mmeConnection::m_sessions --{ mmeSession
+mmeConnection::m_destroyedSessions --{ mmeSession
+
+mmeSession::m_dispatcher --> mamaDispatcher
+mmeSession::m_queue --> mamaQueue : MME Session Queue
+
+mmeTimer::m_timer --> mamaTimer
+mmeInbox::m_inbox -> mamaInbox
+mmeSubscription::m_subscription -> mamaSubscription
+
+mamaInbox::mMamaQueue -> mamaQueue
+
+mamaSubscription::mQueue -> mamaQueue
+
+mamaDispatcher::mQueue --> mamaQueue
+mamaTimer::mQueue --> mamaQueue
+mamaQueue::mDispatcher --> mamaDispatcher
+
+@enduml
