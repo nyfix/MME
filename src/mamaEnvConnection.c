@@ -328,9 +328,12 @@ void MAMACALLTYPE mamaEnvConnection_onDestroyAllSessions(mamaQueue queue, void* 
         /* Get the number of sessions to be destroyed. */
         long numberSessions = list_size(connection->m_destroyedSessions);
         ret = MAMA_STATUS_OK;
-        while ((ret == MAMA_STATUS_OK) && (numberSessions > 0)) {
+        while ((connection->m_destroyedSessions != NULL) && (ret == MAMA_STATUS_OK) && (numberSessions > 0)) {
             /* Enumerate all of the sessions in the list and destroy each one in turn. */
             ret = mamaEnvConnection_enumerateList(connection->m_destroyedSessions, (mamaEnv_listCallback)mamaEnvConnection_onSessionDestroyListEnumerate, NULL);
+            if (ret != MAMA_STATUS_OK) {
+                mama_log(MAMA_LOG_LEVEL_ERROR, "mamaEnvConnection_onDestroyAllSessions - mamaEnvConnection_onSessionDestroyListEnumerate failed with code %X.", ret);
+            }
 
             /* Get the number of sessions remaining in the list. */
             numberSessions = list_size(connection->m_destroyedSessions);
@@ -391,6 +394,9 @@ mama_status mamaEnvConnection_onSessionDestroyListEnumerate(wList list, void* el
                     /* Deallocate all associated memory. */
                     ret = mamaEnvSession_deallocate(*session);
                 }
+                else {
+                    mama_log(MAMA_LOG_LEVEL_ERROR, "mamaEnvConnection_onSessionDestroyListEnumerate - mamaEnvSession_destroy(%p) failed with code %X.", *session, ret);
+                }
             }
         }
 
@@ -435,6 +441,9 @@ void MAMACALLTYPE mamaEnvConnection_onSessionTimerTick(mamaTimer timer, void* cl
     if (connection != NULL) {
         /* Enumerate all of the sessions in the destroy list. */
         ret = mamaEnvConnection_enumerateList(connection->m_destroyedSessions, (mamaEnv_listCallback)mamaEnvConnection_onSessionDestroyListEnumerate, NULL);
+        if (ret != MAMA_STATUS_OK) {
+            mama_log(MAMA_LOG_LEVEL_ERROR, "mamaEnvConnection_onSessionTimerTick - mamaEnvConnection_onSessionDestroyListEnumerate failed with code %X.", ret);
+        }
     }
 
     /* Write a mama log. */
