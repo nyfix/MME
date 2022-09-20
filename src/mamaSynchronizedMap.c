@@ -137,7 +137,7 @@ mama_status synchronizedMap_insert(void* data, void* key, SynchronizedMap* map)
         RB_INSERT(mamaEnvSynchMap_, &map->m_tree, treeEntry);
 
         /* Increment the number of entries. */
-        map->m_numberEntries++;
+        map->m_numberEntries++; // NOLINT
 
         /* Release the lock. */
         wlock_unlock(map->m_lock);
@@ -258,7 +258,7 @@ mama_status synchronizedMap_removeAll(synchronizedMap_Callback callback, void* c
                 }
 
                 /* Remove the root entry. */
-                RB_REMOVE(mamaEnvSynchMap_, &localTree, rootEntry);
+                RB_REMOVE(mamaEnvSynchMap_, &localTree, rootEntry);     // NOLINT
 
                 /* Invoke the callback function for this entry. */
                 if (NULL != callback) {

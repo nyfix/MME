@@ -106,7 +106,7 @@ void MAMACALLTYPE mamaEnvInbox_onInboxDestroy(mamaQueue queue, void* closure)
     }
 
     /* Write a mama log. */
-    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onInboxDestroy with inbox %p completed with code %X.", inbox, ret);
+    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onInboxDestroy with inbox %p completed with code %X.", inbox, ret);   // NOLINT
 }
 
 
