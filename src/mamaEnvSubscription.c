@@ -204,7 +204,7 @@ void MAMACALLTYPE mamaEnvSubscription_onDestroy(mamaSubscription subscription, v
     }
 
     /* Write a mama log. */
-    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - Subscription_onDestroy with subscription %p completed with code %X.", envSubscription, ret);
+    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - Subscription_onDestroy with subscription %p completed with code %X.", envSubscription, ret);  // NOLINT
 }
 
 

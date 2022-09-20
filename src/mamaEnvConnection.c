@@ -157,7 +157,7 @@ mama_status mamaEnv_destroyConnection(mamaEnvConnection connection)
         }
 
         /* Write a mama log. */
-        mama_log(MAMA_LOG_LEVEL_FINE, "MamaEnv - destroyConnection with connection %p completed with code %X.", envConnection, ret);
+        mama_log(MAMA_LOG_LEVEL_FINE, "MamaEnv - destroyConnection with connection %p completed with code %X.", envConnection, ret);    // NOLINT
     }
 
     return ret;

@@ -102,7 +102,7 @@ void MAMACALLTYPE mamaEnvTimer_onTimerDestroy(mamaQueue queue, void* closure)
     }
 
     /* Write a mama log. */
-    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onTimerDestroy with timer %p completed with code %X.", timer, ret);
+    mama_log(MAMA_LOG_LEVEL_FINER, "MamaEnv - onTimerDestroy with timer %p completed with code %X.", timer, ret);   // NOLINT
 }
 
 
